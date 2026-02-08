@@ -10,11 +10,31 @@ const server = http.createServer((req, res) => {
 
 const wss = new WebSocketServer({ server });
 
+function mockTranslation(text, target) {
+  // TODO: Implement actual translation logic
+  return `${text} (translated to ${target})`; // For now, return the original text with a note
+}
+
 wss.on("connection", (ws) => {
   console.log("Client connected");
 
   ws.on("message", (message) => {
-    console.log("Received: message", message.toString());
+    try {
+      const payload = JSON.parse(message.toString());
+      const { id, type, text, target } = payload;
+
+      const translatedText = mockTranslation(text, target);
+
+      const response = {
+        type: "translation",
+        id,
+        text: translatedText,
+      };
+
+      ws.send(JSON.stringify(response));
+    } catch (error) {
+      return ws.send(JSON.stringify({ error: "Invalid message format" }));
+    }
   });
 
   ws.on("close", () => {
